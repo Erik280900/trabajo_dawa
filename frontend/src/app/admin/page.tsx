@@ -9,6 +9,7 @@ import api from '@/lib/api';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 interface AdminStats {
   totalUsers: number;
@@ -171,49 +172,98 @@ export default function AdminDashboard() {
 
         {/* Gráficos de Estado de Tareas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Gráfico de Barras - Estado de Tareas */}
           <Card>
             <CardHeader>
-              <CardTitle>Estado de Tareas</CardTitle>
+              <CardTitle>Distribución de Tareas por Estado</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">Completadas</span>
-                    <span className="text-sm font-bold text-green-600">{stats?.completedTasks || 0}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${stats?.totalTasks ? (stats.completedTasks / stats.totalTasks) * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={[
+                    { name: 'Completadas', cantidad: stats?.completedTasks || 0, fill: '#10b981' },
+                    { name: 'En Progreso', cantidad: stats?.inProgressTasks || 0, fill: '#3b82f6' },
+                    { name: 'Pendientes', cantidad: stats?.pendingTasks || 0, fill: '#eab308' }
+                  ]}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="cantidad" radius={[8, 8, 0, 0]}>
+                    {[
+                      { name: 'Completadas', cantidad: stats?.completedTasks || 0, fill: '#10b981' },
+                      { name: 'En Progreso', cantidad: stats?.inProgressTasks || 0, fill: '#3b82f6' },
+                      { name: 'Pendientes', cantidad: stats?.pendingTasks || 0, fill: '#eab308' }
+                    ].map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">En Progreso</span>
-                    <span className="text-sm font-bold text-blue-600">{stats?.inProgressTasks || 0}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${stats?.totalTasks ? (stats.inProgressTasks / stats.totalTasks) * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                </div>
+          {/* Gráfico Circular - Proporción Visual */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Proporción de Tareas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Completadas', value: stats?.completedTasks || 0, fill: '#10b981' },
+                      { name: 'En Progreso', value: stats?.inProgressTasks || 0, fill: '#3b82f6' },
+                      { name: 'Pendientes', value: stats?.pendingTasks || 0, fill: '#eab308' }
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {[
+                      { name: 'Completadas', value: stats?.completedTasks || 0, fill: '#10b981' },
+                      { name: 'En Progreso', value: stats?.inProgressTasks || 0, fill: '#3b82f6' },
+                      { name: 'Pendientes', value: stats?.pendingTasks || 0, fill: '#eab308' }
+                    ].map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">Pendientes</span>
-                    <span className="text-sm font-bold text-yellow-600">{stats?.pendingTasks || 0}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-yellow-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${stats?.totalTasks ? (stats.pendingTasks / stats.totalTasks) * 100 : 0}%` }}
-                    ></div>
-                  </div>
+        {/* Métricas Adicionales */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Usuarios</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Total</span>
+                  <span className="text-2xl font-bold text-blue-600">{stats?.totalUsers || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Activos</span>
+                  <span className="text-xl font-semibold text-green-600">{stats?.activeUsers || 0}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${stats?.totalUsers ? (stats.activeUsers / stats.totalUsers) * 100 : 0}%` }}
+                  ></div>
                 </div>
               </div>
             </CardContent>
@@ -221,23 +271,39 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Resumen General</CardTitle>
+              <CardTitle className="text-base">Proyectos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <span className="text-sm font-medium text-gray-700">Etiquetas</span>
-                  <span className="text-lg font-bold text-blue-600">{stats?.totalTags || 0}</span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Total</span>
+                  <span className="text-2xl font-bold text-purple-600">{stats?.totalProjects || 0}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                  <span className="text-sm font-medium text-gray-700">Usuarios Activos</span>
-                  <span className="text-lg font-bold text-purple-600">{stats?.activeUsers || 0}</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Promedio tareas/proyecto</span>
+                  <span className="text-xl font-semibold text-gray-700">
+                    {stats?.totalProjects ? Math.round(stats.totalTasks / stats.totalProjects) : 0}
+                  </span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <span className="text-sm font-medium text-gray-700">Tasa de Completado</span>
-                  <span className="text-lg font-bold text-green-600">
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Rendimiento</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Tasa de Completado</span>
+                  <span className="text-2xl font-bold text-green-600">
                     {stats?.totalTasks ? Math.round((stats.completedTasks / stats.totalTasks) * 100) : 0}%
                   </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Etiquetas Creadas</span>
+                  <span className="text-xl font-semibold text-yellow-600">{stats?.totalTags || 0}</span>
                 </div>
               </div>
             </CardContent>
