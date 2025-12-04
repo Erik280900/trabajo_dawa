@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/stores/auth';
 import { Header } from '@/components/layout/Header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +13,8 @@ import toast from 'react-hot-toast';
 import { Tag } from '@/types';
 
 export default function TagsPage() {
+  const router = useRouter();
+  const { user: authUser } = useAuthStore();
   const [tags, setTags] = useState<Tag[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -19,6 +23,14 @@ export default function TagsPage() {
   const [color, setColor] = useState('#6B7280');
   const [nameError, setNameError] = useState<string | null>(null);
   const [colorError, setColorError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Redirigir a admin si es administrador
+    if (authUser?.role?.name === 'admin') {
+      router.push('/admin');
+      toast.error('Los administradores no pueden gestionar etiquetas');
+    }
+  }, [authUser, router]);
 
   const fetchTags = async () => {
     try {

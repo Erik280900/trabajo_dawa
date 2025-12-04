@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useAuthStore } from '@/stores/auth';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -20,22 +21,26 @@ interface ProjectCardProps {
     };
     tasks?: Array<{
       id: number;
-      status: 'pending' | 'in_progress' | 'completed';
+      status: 'pending' | 'in_progress' | 'completed' | 'review';
     }>;
   };
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
+  const { user: authUser } = useAuthStore();
+  const isAdmin = authUser?.role?.name === 'admin';
+  
   const taskStats = project.tasks?.reduce(
     (acc, task) => {
       if (task.status === 'pending') acc.pending++;
       else if (task.status === 'in_progress') acc.in_progress++;
+      else if (task.status === 'review') acc.review++;
       else if (task.status === 'completed') acc.completed++;
       acc.total++;
       return acc;
     },
-    { pending: 0, in_progress: 0, completed: 0, total: 0 }
-  ) || { pending: 0, in_progress: 0, completed: 0, total: 0 };
+    { pending: 0, in_progress: 0, review: 0, completed: 0, total: 0 }
+  ) || { pending: 0, in_progress: 0, review: 0, completed: 0, total: 0 };
 
   const completionPercentage = taskStats.total > 0
     ? Math.round((taskStats.completed / taskStats.total) * 100)
@@ -100,7 +105,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </div>
           <div className="flex space-x-2">
             <Link href={`/projects/${project.id}`}>
-              <Button variant="outline" size="sm">Ver Proyecto</Button>
+              <Button variant="outline" size="sm">
+                {isAdmin ? 'Ver Detalles' : 'Ver Proyecto'}
+              </Button>
             </Link>
           </div>
         </div>

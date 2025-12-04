@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTaskStore } from '@/stores/tasks';
 import { useProjectStore } from '@/stores/projects';
 import { useRequireAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/stores/auth';
 import { Header } from '@/components/layout/Header';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { Button } from '@/components/ui/button';
@@ -15,12 +17,21 @@ import toast from 'react-hot-toast';
 
 export default function TasksPage() {
   const { user } = useRequireAuth();
+  const { user: authUser } = useAuthStore();
+  const router = useRouter();
   const { tasks, isLoading, fetchTasks } = useTaskStore();
   const { projects, fetchProjects } = useProjectStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [projectFilter, setProjectFilter] = useState('all');
+
+  // Redirigir admin a su panel
+  useEffect(() => {
+    if (authUser?.role?.name === 'admin') {
+      router.push('/admin/tasks');
+    }
+  }, [authUser, router]);
 
   useEffect(() => {
     if (user) {
@@ -87,8 +98,15 @@ export default function TasksPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header de la página */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Mis Tareas</h1>
-          <p className="text-gray-600 mt-1">Gestiona todas tus tareas desde aquí</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {authUser?.role?.name === 'admin' ? 'Todas las Tareas' : 'Mis Tareas'}
+          </h1>
+          <p className="text-gray-600 mt-1">
+            {authUser?.role?.name === 'admin' 
+              ? 'Vista de todas las tareas del sistema' 
+              : 'Gestiona todas tus tareas desde aquí'
+            }
+          </p>
         </div>
 
         {/* Estadísticas rápidas */}

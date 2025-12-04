@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useProjectStore } from '@/stores/projects';
 import { useRequireAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/stores/auth';
 import { Header } from '@/components/layout/Header';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { ProjectForm } from '@/components/projects/ProjectForm';
@@ -14,9 +16,18 @@ import toast from 'react-hot-toast';
 
 export default function ProjectsPage() {
   const { user } = useRequireAuth();
+  const { user: authUser } = useAuthStore();
+  const router = useRouter();
   const { projects, isLoading, fetchProjects } = useProjectStore();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Redirigir admin a su panel
+  useEffect(() => {
+    if (authUser?.role?.name === 'admin') {
+      router.push('/admin/projects');
+    }
+  }, [authUser, router]);
 
   useEffect(() => {
     if (user) {
@@ -58,16 +69,23 @@ export default function ProjectsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Proyectos</h1>
-            <p className="text-gray-600 mt-1">Gestiona todos tus proyectos desde aquí</p>
+            <p className="text-gray-600 mt-1">
+              {authUser?.role?.name === 'admin' 
+                ? 'Vista de todos los proyectos del sistema' 
+                : 'Gestiona todos tus proyectos desde aquí'
+              }
+            </p>
           </div>
-          <div className="mt-4 sm:mt-0">
-            <Button onClick={() => setIsCreateModalOpen(true)}>
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Nuevo Proyecto
-            </Button>
-          </div>
+          {authUser?.role?.name !== 'admin' && (
+            <div className="mt-4 sm:mt-0">
+              <Button onClick={() => setIsCreateModalOpen(true)}>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Nuevo Proyecto
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Búsqueda */}
@@ -154,18 +172,18 @@ export default function ProjectsPage() {
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {searchQuery || statusFilter !== 'all' 
+                {searchQuery 
                   ? 'No se encontraron proyectos' 
                   : 'No hay proyectos aún'
                 }
               </h3>
               <p className="text-gray-600 mb-6">
-                {searchQuery || statusFilter !== 'all'
+                {searchQuery
                   ? 'Prueba ajustando los filtros de búsqueda'
                   : 'Crea tu primer proyecto para empezar'
                 }
               </p>
-              {!searchQuery && statusFilter === 'all' && (
+              {!searchQuery && (
                 <Button onClick={() => setIsCreateModalOpen(true)}>
                   Crear Primer Proyecto
                 </Button>

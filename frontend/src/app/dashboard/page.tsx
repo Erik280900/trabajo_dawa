@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useRequireAuth } from '@/hooks/useAuth';
 import { useProjectStore } from '@/stores/projects';
@@ -16,9 +17,17 @@ import { Header } from '@/components/layout/Header';
 export default function DashboardPage() {
   const { user } = useRequireAuth();
   const { user: authUser, logout } = useAuthStore();
+  const router = useRouter();
   const { projects, isLoading, fetchProjects } = useProjectStore();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [tagsCount, setTagsCount] = useState<number>(0);
+
+  // Redirigir admin a su panel
+  useEffect(() => {
+    if (authUser?.role?.name === 'admin') {
+      router.push('/admin');
+    }
+  }, [authUser, router]);
 
   useEffect(() => {
     if (user) {
@@ -89,15 +98,20 @@ export default function DashboardPage() {
                 ¡Bienvenido, {authUser?.username}! 👋
               </h1>
               <p className="mt-2 text-gray-600">
-                Gestiona tus proyectos y tareas de manera eficiente
+                {authUser?.role?.name === 'admin' 
+                  ? 'Panel de supervisión - Solo lectura'
+                  : 'Gestiona tus proyectos y tareas de manera eficiente'
+                }
               </p>
             </div>
-            <Button onClick={() => setIsCreateModalOpen(true)}>
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Nuevo Proyecto
-            </Button>
+            {authUser?.role?.name !== 'admin' && (
+              <Button onClick={() => setIsCreateModalOpen(true)}>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Nuevo Proyecto
+              </Button>
+            )}
           </div>
         </div>
 
@@ -157,9 +171,11 @@ export default function DashboardPage() {
               <CardContent>
                 <div className="text-2xl font-bold">{tagsCount}</div>
                 <p className="text-xs text-gray-600">Etiquetas totales</p>
-                <div className="mt-3">
-                  <Link href="/tags"><Button variant="outline" size="sm">Gestionar Etiquetas</Button></Link>
-                </div>
+                {authUser?.role?.name !== 'admin' && (
+                  <div className="mt-3">
+                    <Link href="/tags"><Button variant="outline" size="sm">Gestionar Etiquetas</Button></Link>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

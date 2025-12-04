@@ -8,11 +8,10 @@ const {
   changePassword 
 } = require('../controllers/authController');
 const { authenticateToken } = require('../middleware/auth');
-const { authLimiter } = require('../middleware/rateLimiter');
 
 // Rutas públicas (sin autenticación)
-router.post('/register', authLimiter, register);
-router.post('/login', authLimiter, login);
+router.post('/register', register);
+router.post('/login', login);
 
 // Rutas protegidas (requieren autenticación)
 router.get('/profile', authenticateToken, getProfile);

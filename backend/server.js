@@ -5,7 +5,6 @@ const morgan = require('morgan');
 require('dotenv').config();
 
 const { testConnection, syncDatabase } = require('./config/database');
-const { generalLimiter } = require('./middleware/rateLimiter');
 const routes = require('./routes');
 
 const app = express();
@@ -21,7 +20,6 @@ app.use(cors({
 // Middlewares de seguridad y utilidad
 app.use(helmet());
 app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'combined'));
-app.use(generalLimiter);
 
 // Middleware para parsing de JSON
 app.use(express.json({ limit: '10mb' }));
